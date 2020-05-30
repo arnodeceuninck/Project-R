@@ -71,6 +71,32 @@ print("3. Verband type hartinfarct/ontslagstatus")
 print("-------------------------------------------")
 # Discrete variabelen: X^2 test
 # Leuk tabelletje opstellen
+# alive ( Q golf, geen Q golf) # linksboven 0,0
+# dead ( Q golf, geen Q golf) # rechtsonder 1,1
+dstat <- data$dstat
+mitype <- data$mitype
+
+alive <- c(nrow(data[dstat=="0" & mitype=="0",]), nrow(data[dstat=="0" & mitype=="1",]))
+dead <- c(nrow(data[dstat=="1" & mitype=="0",]), nrow(data[dstat=="1" & mitype=="1",]))
+ctable <- data.frame(alive, dead)
+
+chiSq <- chisq.test(ctable)
+chiSq
+chiSq$observed
+chiSq$expected
+
+noqray <- c(nrow(data[dstat=="0" & mitype=="0",]), nrow(data[dstat=="1" & mitype=="0",]))
+qray <- c(nrow(data[dstat=="0" & mitype=="1",]), nrow(data[dstat=="1" & mitype=="1",]))
+ctable <- data.frame(noqray, qray)
+
+chiSq <- chisq.test(ctable)
+chiSq
+chiSq$observed
+chiSq$expected
+
+# p-value 0.9306 > 0.05, H0 wordt dus aanvaard (Ze zijn dus onafhankelijk van elkaar)
+
+
 
 # 4. Kan je uit de leeftijd van de patiënt het BMI voorspellen? Beschrijf uitvoerig.
 # Verband tussen twee continue variabelen
