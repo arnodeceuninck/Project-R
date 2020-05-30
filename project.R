@@ -61,7 +61,7 @@ dead <- data$los[data$fstat=="1"] # Patienten dood bij laatste opvolging
 var.test(alive, dead) # 0.6906 > 0.05 -> Var dus hetzelfde
 t.test(dead, alive, var.equal=TRUE) # 0.08266 > 0.05 -> H0 aanvaarden (zijn dus hetzelfde) -> Niet afhankelijk
 
-# p-value 0.08266 > 0.05 -> Reject, er is dus wel een verband tussen de twee
+# p-value 0.08266 > 0.05 -> Reject (? H0 aanvaarden), er is dus wel een verband tussen de twee
 
 # 3. Ga na of er een verband is tussen het type hartinfarct en de ontslagstatus uit het ziekenhuis
 # na opname. Voer opnieuw een gepaste test uit.
@@ -102,5 +102,16 @@ chiSq$expected
 # Verband tussen twee continue variabelen
 print("4. Leeftijd voorspellen uit BMI")
 print("-------------------------------------------")
+qqnorm(data$age, main = "Normaalverdeling leeftijd")
+shapiro.test(data$age)
+qqnorm(data$bmi, main = "Normaalverdeling BMI")
+shapiro.test(data$bmi)
+# Allebei niet normaal verdeeld volgens shapiro test (ondanks lineair op eerste zicht), we kunnen Pearsons correlatiecoefficient dus niet gebruiken
+plot(data$age, data$bmi, type="p", xlab="Leeftijd", ylab="BMI", main="Verband leeftijd en BMI") # Op het eerste zicht geen lineair verband
 
-plot(data$age, data$bmi, type="p", xlab="Leeftijd", ylab="BMI", main="Verband leeftijd en BMI")
+# We zouden het dus niet op de manier hieronder mogen testen (alsnog gedaan als oefening)
+cor.test(data$age, data$bmi, method = "pearson") # -> Duidelijk geen correlatie
+# Niet bivariaat verdeeld, dus gebruik maken van Spearmann
+# H 0 : er is geen monotoon verband tussen X en Y
+#H 1 : er is een mate van monotoon verband tussen X en Y
+cor.test(data$age, data$bmi, method = "spearman") # Ook hierbij is onze p-waarde veel te klein, geen correlatie, dus nope, da gaat ni
