@@ -117,3 +117,26 @@ cor.test(data$age, data$bmi, method = "pearson") # -> Duidelijk geen correlatie
 # H 0 : er is geen monotoon verband tussen X en Y
 #H 1 : er is een mate van monotoon verband tussen X en Y
 cor.test(data$age, data$bmi, method = "spearman") # Ook hierbij is onze p-waarde veel te klein, geen correlatie, dus nope, da gaat ni
+
+linreg <- lm(data$bmi ~ data$age)
+summary(linreg)
+
+res <- residuals(linreg)
+qqnorm(res,xlab="Standard Normal Quantiles", ylab="Raw Residuals",main="Raw Residual-Normal QQ-plot")
+shapiro.test(res)
+
+plot(data$age, data$bmi, type="p", xlab="Leeftijd", ylab="BMI", main="Verband leeftijd en BMI")
+abline(linreg,col="red",lty=1)
+
+StandRes <- rstandard(linreg)
+plot(data$age,StandRes,xlab="Leeftijd",
+ylab="Standardized Residuals",main="Standardized Residuals")
+abline(h=0,col="blue",lty=1)
+abline(h=-2.5,col="red",lty=1)
+abline(h=2.5,col="red",lty=1)
+
+predictedMort <- predict.lm(linreg)
+plot(data$bmi,predictedMort,xlab="Geobserveerde BMI",
+ylab="Voorspelde BMI",
+main="Voorspelde BMI = f(Geobserveerde BMI)")
+abline(a=0,b=1,col="red",lty=1)

@@ -4,7 +4,8 @@
 \usepackage{amsthm}
 \usepackage{hyperref}
 
-\usepackage{graphicx} 
+\usepackage{graphicx}
+\usepackage{subfig}
 
 \title{Project Hartinfarcten}
 \author{Arno Deceuninck}
@@ -185,5 +186,140 @@ mitype <- data$mitype
 \end{verbatim}
 
 \subsection{Test}
+We beginnen met een contingentietabel op te stellen. We beginnen met op de rijen te zetten of de patienten levend of dood waren bij ontslag en op de kolom het type hartinfectie. 
+
+\begin{verbatim}
+alive <- c(nrow(data[dstat=="0" & mitype=="0",]), nrow(data[dstat=="0" & mitype=="1",]))
+dead <- c(nrow(data[dstat=="1" & mitype=="0",]), nrow(data[dstat=="1" & mitype=="1",]))
+ctable <- data.frame(alive, dead)
+\end{verbatim}
+
+Hieruit berekenen we enkele waarden m.b.v. een $\chi^2$-test. De gegevens ervan zetten we hieronder op een rijtje. \\ \\
+$H_0$: Het type hartinfarct en ontslagstatus uit het ziekenhuis zijn onafhankelijk van elkaar.\\
+$H_1$: Deze twee zijn wel afhankelijk van elkaar.
+
+\begin{verbatim}
+chiSq <- chisq.test(ctable)
+\end{verbatim}
+
+\begin{table}[h]
+%\centering
+\begin{tabular}{|l|l|l|}
+\hline
+       & geen Q-golven & wel Q-golven \\ \hline
+levend & 318           & 138          \\ \hline
+dood   & 28            & 11           \\ \hline
+\end{tabular}
+\quad
+%\begin{table}[]
+%\centering
+\begin{tabular}{|l|l|l|}
+\hline
+       & geen Q-golven & wel Q-golven \\ \hline
+levend & 318.7394      & 137.2606     \\ \hline
+dood   & 27.26061      & 11.73939     \\ \hline
+\end{tabular}
+\caption{links: geobserveerde waarden, rechts: verwachte waarden}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+$\chi^2$  & df & p-waarde \\ \hline
+0.0075814 & 1  & 0.9306   \\ \hline
+\end{tabular}
+\caption{resultaat test}
+\end{table}
+
+De test is ook gedaan met rijen en kolommen omgewisseld en dit gaf, zoals verwacht, dezelfde resultaten. Onze p-waarde is groter dan 0.05, dus we kunnen $H_0$ aanvaarden: er is geen verband tussen de twee. 
+
+\section{Leeftijd voorspellen uit BMI}
+\subsection{Teststatistiek}
+Als teststatistiek worden de kolommen age en bmi uit de data gebruikt. Om het type test te berekenen moeten we eerst zien of deze gegevens normaal verdeeld zijn. 
+
+\begin{verbatim}
+qqnorm(data$age, main = "Normaalverdeling leeftijd")
+qqnorm(data$bmi, main = "Normaalverdeling BMI")
+\end{verbatim}
+
+\begin{figure}[h]%
+    \centering
+    \subfloat[QQ-Plot leeftijd]{{\includegraphics[width=5cm]{output/normaal-age.png} }}%
+    \qquad
+    \subfloat[QQ-Plot BMI]{{\includegraphics[width=5cm]{output/normaal-bmi.png} }}%
+\end{figure}
+
+We kunnen in beide gevallen wel een lineair verband herkennen, maar doen toch een shapiro test om er zeker van te zijn. \\ \\
+$H_0$: BMI en leeftijd zijn normaal verdeeld.\\
+$H_1$: Ze zijn niet normaal verdeeld.
+
+\begin{verbatim}
+shapiro.test(data$age)
+shapiro.test(data$bmi)
+\end{verbatim} 
+
+Beide tests geven een te kleine p-waarde ($H_0$ wordt verwerpt), dus kunnen we er niet vanuit gaan dat deze normaal verdeeld zijn. Pearsons correlatiecoefficient kunnen we dus niet gebruiken, dus gebruik ik Spearman's test in de plaats.
+
+\begin{center}
+    \includegraphics[scale=0.5]{output/linreg-scatter.png}
+\end{center}
+
+\begin{verbatim}
+plot(data$age, data$bmi, type="p", xlab="Leeftijd", ylab="BMI", 
+	     main="Verband leeftijd en BMI")
+abline(linreg,col="red",lty=1)
+\end{verbatim}
+
+\subsection{Spearman's test}
+$H_0$ : er is geen monotoon verband tussen leeftijd en BMI
+$H_1$ : er is een mate van monotoon verband tussen leeftijd en BMI
+
+\begin{verbatim}
+cor.test(data$age, data$bmi, method = "spearman") 
+\end{verbatim}
+
+We merken dat onze p-waarde hier veel te klein is, dus moeten we $H_0$ verwerpen: Er is een mate van monotoon verband tussen leeftijd en BMI. De Spearman correlatieco\"effici\"ent is negatief, wat erop wijst dat de ene variabele stijgt terwijl de andere afneemt.
+
+\subsection{Lineaire regressie}
+
+We zullen nu m.b.v. lineaire regressie onderzoeken of het zinvol is om te stellen dat dit verband lineair is. \\ \\
+
+$H_0$ : er is een lineair verband tussen leeftijd en bmi\\
+$H_1$ : er is geen lineair verband tussen de twee
+
+\begin{verbatim}
+linreg <- lm(data$bmi ~ data$age)
+summary(linreg)
+\end{verbatim}
+
+Dit geeft ons \^a = 37.16551 en \^b = -0.15081. De regressierechte wordt dus: BMI = 37.16551 - 0.15081 * leeftijd. $R^2$ is 0.1608, wat inhoudt dat slechts 16.08\% van de variabiliteit op het BMI verklaard wordt door de leeftijd. Onze p-waarde (van de F-test) is onder 0.05, wat wil zeggen dat het model niet zinvol is. We kunnen het BMI dus niet voorspellen uit de leeftijd.
+
+%We zullen nog nagaan of de fouttermen normaal verdeeld zijn.
+%
+%\begin{verbatim}
+%res <- residuals(linreg)
+%qqnorm(res,xlab="Standard Normal Quantiles",
+%ylab="Raw Residuals",main="Raw Residual-Normal QQ-plot")
+%\end{verbatim}
+%
+%\begin{center}
+%    \includegraphics[scale=0.5]{output/residual.png}
+%\end{center}
+%
+%\begin{figure}[!htb]
+%\minipage{0.32\textwidth}
+%  \includegraphics[width=\linewidth]{output/%linreg-scatter.png}
+%\endminipage\hfill
+%\minipage{0.32\textwidth}
+%  \includegraphics[width=\linewidth]{output/%stand-res.png}
+%\endminipage\hfill
+%\minipage{0.32\textwidth}%
+%  \includegraphics[width=\linewidth]{output/pred-%bmi.png}
+%\endminipage
+%\end{figure}
+
+
+
 
 \end{document}
