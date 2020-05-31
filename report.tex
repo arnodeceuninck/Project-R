@@ -1,0 +1,189 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[dutch]{babel}
+\usepackage{amsthm}
+\usepackage{hyperref}
+
+\usepackage{graphicx} 
+
+\title{Project Hartinfarcten}
+\author{Arno Deceuninck}
+
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\begin{verbatim}
+data <- read.table(file="heart.csv",header=TRUE,sep=";",dec=",")
+\end{verbatim}
+
+\subsection{Verwijderde rijen}
+Op basis van je studentennummer moesten er enkele rijen verwijderd worden. Dit is gedaan m.b.v. de volgende code in R. 
+\begin{verbatim}
+# Verwijder de nodige rijen op basis van studienummer s0181217
+i <- 2
+j <- 1
+k <- 7
+data <- data[-c(k+1, j+1, i+1, j*k+1, i*j+1, i*k+1, i*j*k+1, i+j+k+1), ]
+\end{verbatim}
+
+\section{Verdeling variabele los}
+
+\begin{quote}
+\textit{
+Bestudeer en bespreek de verdeling van de variabele los. Bespreek hiertoe gepaste grafische
+voorstellingen. Ga ook op een formele manier na of de gegevens normaal verdeeld zijn.
+Indien dit niet het geval is, in welke zin wijken de gegevens af van normaal verdeelde
+gegevens. Kan je de gegevens transformeren naar normaal verdeelde gegevens? Bespreek.}
+\end{quote}
+
+\subsection{Normaal verdeeld}
+Om een beeld te krijgen van wat de verdeling zou kunnen zijn, heb ik verschillende plots gemaakt hiervan. Op het einde van dit deel wordt er ook formeel getest m.b.v. een shapiro test. We gebruiken hier telkens als teststatistiek de waarden \"los\" uit de meegegeven csv (met de rijen verwijderd zoals hierboven beschreven).  
+\begin{verbatim}
+los <- data$los
+\end{verbatim}
+\subsubsection{Boxplot}
+\begin{center}
+    \includegraphics[scale=0.5]{output/boxplot-los.png}
+\end{center}
+\begin{verbatim}
+boxplot(los, ylab="Boxplot duur ziekenhuisbezoek (in dagen)")
+\end{verbatim}
+Hierin kunnen we al zien dat dit waarschijnlijk geen normale verdeling zal zijn, aangezien er een redelijk lange staart enkel langs rechts is, en dus geen symmetrie.
+\subsubsection{Histogram}
+\begin{center}
+    \includegraphics[scale=0.5]{output/Histogram-los.png}
+\end{center}
+
+\begin{verbatim}
+    hist(los, ylab="aantal patienten", xlab="Histogram duur ziekenhuisbezoek (in dagen)") 
+\end{verbatim}
+    
+Ook hieruit kunnen we afleiden dat er overduidelijk geen symmetrie is en de gegevens dus niet (zonder transformaties) normaal verdeeld kunnen zijn.
+\subsubsection{QQ-Plot}
+\begin{center}
+    \includegraphics[scale=0.5]{output/qqplot-los.png}
+\end{center}
+\begin{verbatim}
+qqnorm(los, main="QQ-plot duur ziekenhuisbezoek (in dagen)")
+\end{verbatim}
+Uit deze grafiek kunnen we afleiden welke transformatie we eventueel kunnen doen om een normaalverdeling te krijgen. Om normaal verdeeld te zijn, moet deze grafiek een lineair verband weergeven. We zien echter redelijk duidelijk een exponentieel verband, dus kan het zeker interessant zijn om een kijkje te nemen of het logaritme van je gegevens wel normaal verdeeld is.
+\subsubsection{Shapiro test}
+We kunnen visueel nu wel besluiten dat de gegevens zonder transformatie niet normaal verdeeld zijn. Dit is echter gewoon op het zicht, dus bij deze doen we ook een formelere test hiervoor, namelijk de Shapiro test. \\ \\
+$H_0$: De gegevens van los zijn normaal verdeeld \\
+$H_1$: De gegevens van los zijn niet normaal verdeeld 
+\begin{verbatim}
+shapiro.test(los)
+\end{verbatim} 
+Deze test geeft als resultaat dat onze p-waarde kleiner is dan 2.2e-16, dus kunnen we inderdaad zegen dat de gegevens van los niet normaal zijn verdeeld.
+
+\subsection{Logaritmisch verdeeld}
+We zagen bij het QQ-plot duidelijk dat er een exponentieel verband is, dus nemen we nu een kijkje of het logaritme van die data wel normaal verdeeld is. 
+
+\begin{verbatim}
+log_los <- log(los)
+\end{verbatim}
+
+Hierbij hebben we echter het probleem dat er mensen tussenzitten die na 0 dagen zijn ontslagen, en $\log(0)$ is geen re\"eel getal (in R is dit $-\inf$), dus halen we de onbepaalde of oneindige gegevens uit onze lijst.
+
+\begin{verbatim}
+log_los <- log_los[is.finite(log_los)]
+\end{verbatim}
+
+\subsubsection{Grafisch}
+We kunnen nu een kijkje nemen of deze getransformeerde gegevens grafisch wel een normaalverdeling vormen.  
+
+\begin{figure}[!htb]
+\minipage{0.32\textwidth}
+  \includegraphics[width=\linewidth]{output/boxplot-loglos.png}
+\endminipage\hfill
+\minipage{0.32\textwidth}
+  \includegraphics[width=\linewidth]{output/histogram-loglos.png}
+\endminipage\hfill
+\minipage{0.32\textwidth}%
+  \includegraphics[width=\linewidth]{output/qqplot-loglos.png}
+\endminipage
+\end{figure}
+
+\begin{verbatim}
+qqnorm(log_los, main="QQ-plot log van de duur ziekenhuisbezoek (in dagen)")
+boxplot(log_los, main="Boxplot log van de duur ziekenhuisbezoek (in dagen)")
+hist(log_los, main="Histogram log van de duur ziekenhuisbezoek (in dagen)")
+\end{verbatim}
+Hier kunnen we wel al de kenmerken van een normaalverdeling in terugvinden. Vooral het QQ-Plot is opvallend: we kunnen hier duidelijk een lineair verband in terugvinden, wat dus zou wijzen op een normaalverdeling. Bij het QQ-Plot is het echter opvallend dat het aantal dagen een discrete veranderlijke is, wat een normale verdeling sowieso onmogelijk maakt. 
+
+\subsubsection{Shapiro test}
+
+We zullen nog formeel testen dat dit geen normaal verdeling is (door het discreet zijn) a.d.h.v. een Shapiro test.  \\ \\
+$H_0$: De gegevens van los zijn normaal verdeeld \\
+$H_1$: De gegevens van los zijn niet normaal verdeeld 
+\begin{verbatim}
+shapiro.test(log_los)
+\end{verbatim}
+
+Dit geeft als p-waarde 1.197e-07, wat nogsteeds te klein is, dus we verwerpen onze $H_0$. Het is dus niet normaal verdeeld. 
+
+\subsection{Conclusie}
+We konden dus duidelijk een langere staart zien langs rechts bij zowel het boxplot als het histogram. Het QQ-plot liet duidelijk zien dat de gegevens niet normaal verdeeld waren en gaf het idee om het logaritme van de gegevens te nemen. Dit kwam heel sterk in de buurt van een normale verdeling. In het QQ-plot kon je wel een rechte herkennen, maar deze was opgesplitst in treden omdat het aantal dagen een discrete veranderlijke was. De Shapiro test verwierp dus ook dit resultaat. We kunnen niet a.d.h.v. een transformatie het discrete continu maken. Het logaritme nemen blijft dus de transformatie die ons het dichste bij de normale verdeling brengt.
+
+\section{Verband duur, dood/levend}
+
+\begin{quote}
+\textit{
+Hangt de duur van het ziekenhuisverblijf af van het levend of gestorven zijn van de
+patiënten? M.a.w. is de duur van het ziekenhuisverblijf identiek verdeeld bij de populatie levende en gestorven patiënten? Voer een gepaste test uit.}
+\end{quote}
+
+\subsection{Opmerking}
+Het was niet direct duidelijk over wanneer het "levend of gestorven zijn" ging, na de laatste opvolging of op het moment van het ontslag uit het ziekenhuis. Ik ben ervan uit gegaan dat het om de laatste opvolging ging.
+
+\subsection{Teststatistiek}
+Hierbij heb ik gebruik gemaakt van de variabele fstat en los uit de data uit de csv (met de nodige rijen eruit gehaald).
+
+\begin{verbatim}
+alive <- data$los[data$fstat=="0"] # Patienten levend bij laatste opvolging
+dead <- data$los[data$fstat=="1"] # Patienten dood bij laatste opvolging
+\end{verbatim} 
+
+\subsection{Test}
+Om een t-test uit te voeren moet ik eerst nagaan of de variantie voor beide groepen gelijk zijn. \\ \\
+$H_0$: Beide groepen hebben dezelfde variantie. \\
+$H_1$: De variantie van de groepen is verschillend. 
+
+\begin{verbatim}
+var.test(alive, dead)
+\end{verbatim}
+
+Als resultaat van deze test krijg ik als p-waarde 0.6906. Dit is duidelijk groter dan 0.05, dus we kunnen er vanuit gaan dat de variantie voor beide groepen hetzelfde is (we aanvaarden $H_0$ en dus verliezen we hierdoor geen vrijheidsgraad).
+
+We kunnen nu dus onze t-test zelf uitvoeren met gelijke variantie. \\ \\
+$H_0$: Er is geen verschil tussen beide verdelingen. \\
+$H_1$: Er is wel een verschil. 
+
+\begin{verbatim}
+t.test(dead, alive, var.equal=TRUE)
+\end{verbatim}
+
+Dit geeft als p-waarde 0.08156, wat dus betekent dat we onze $H_0$ kunnen behouden: De twee variabelen hangen dus niet af van elkaar. 
+
+\section{Verband type hartinfarct/ontslagstatus}
+\begin{quote}
+\textit{
+Ga na of er een verband is tussen het type hartinfarct en de ontslagstatus uit het ziekenhuis
+na opname. Voer opnieuw een gepaste test uit.}
+\end{quote}
+
+\subsection{Type test}
+We zitten met groepen, dus discrete variabelen. Een $\chi^2$-test is hier van toepassing. Als teststatistiek gebruiken we de waarden dstat en mitype uit de data. 
+
+\begin{verbatim}
+dstat <- data$dstat
+mitype <- data$mitype
+\end{verbatim}
+
+\subsection{Test}
+
+\end{document}

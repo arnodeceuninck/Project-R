@@ -27,7 +27,7 @@ print(paste0("Range: ", max-min))
 shapiro.test(los)
 print(paste0("Shapiro: ", "W = 0.76851, p-value < 2.2e-16")) # Shapiro test om aan te tonen dat het niet normala verdeeld is, resultaat shapiro.test(los) er zelf ingeplakt, aangezien die functie de data returnt
 boxplot(los, ylab="Boxplot duur ziekenhuisbezoek (in dagen)") # Boxplot assymetrisch
-hist(los, ylab="Histogram duur ziekenhuisbezoek (in dagen)") # Assymetrisch # https://www.datamentor.io/r-programming/histogram/
+hist(los, ylab="aantal patienten", xlab="Histogram duur ziekenhuisbezoek (in dagen)") # Assymetrisch # https://www.datamentor.io/r-programming/histogram/
 # https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/qqnorm
 # https://stackoverflow.com/questions/15589601/print-string-and-variable-contents-on-the-same-line-in-r
 # https://stackoverflow.com/questions/6123378/how-to-read-in-numbers-with-a-comma-as-decimal-separator
@@ -43,6 +43,8 @@ avg <- mean(log_los)
 sdev <- sd(log_los)
 print(paste0("Approx: X~N(", avg, ", ", sdev, ")"))
 shapiro.test(log_los)
+library(nortest)
+
 print(paste0("Shapiro: ", "W = 0.97409, p-value = 1.197e-07")) # De log data is wel normaal verdeeld, # W staat voor r_Q # p-waarde zo laag waarschijnlijk door discrete dagen
 
 
